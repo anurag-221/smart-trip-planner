@@ -1,13 +1,14 @@
-import { FastifyInstance, FastifyRequest } from "fastify";
-import { WebSocket } from "ws";
-import { tripSockets } from "../realtime/socket.store";
+import { FastifyInstance } from "fastify";
+import WebSocket from "ws";
+
+const tripSockets = new Map<string, Set<WebSocket>>();
 
 export async function realtimeRoutes(app: FastifyInstance) {
   app.get(
     "/ws/trips/:tripId",
-    { websocket: true } as any,
-    ((socket: WebSocket, request: FastifyRequest) => {
-      const { tripId } = request.params as { tripId: string };
+    { websocket: true },
+    (socket, request) => {
+      const { tripId } = request.params as any;
 
       if (!tripSockets.has(tripId)) {
         tripSockets.set(tripId, new Set());
@@ -16,18 +17,18 @@ export async function realtimeRoutes(app: FastifyInstance) {
       const sockets = tripSockets.get(tripId)!;
       sockets.add(socket);
 
-      sockets.forEach((s) =>
-        s.send(
-          JSON.stringify({
-            type: "USER_JOINED",
-            tripId,
-          })
-        )
-      );
+      socket.on("message", (msg) => {
+        // broadcast to all in same trip
+        sockets.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(msg.toString());
+          }
+        });
+      });
 
       socket.on("close", () => {
         sockets.delete(socket);
       });
-    }) as any // 🔑 THIS is the missing piece
+    }
   );
 }
