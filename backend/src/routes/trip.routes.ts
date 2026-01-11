@@ -6,6 +6,7 @@ import {
   getTripHandler,
   joinTripHandler,
   approveMemberHandler,
+  getAllTripsHandler,
 } from "../controllers/trip.controller";
 
 export async function tripRoutes(app: FastifyInstance) {
@@ -13,6 +14,11 @@ export async function tripRoutes(app: FastifyInstance) {
     "/trips",
     { preHandler: authenticate },
     createTripHandler
+  );
+
+   app.get(
+    "/trips",
+    getAllTripsHandler
   );
 
   app.get("/trips/:tripId", getTripHandler);

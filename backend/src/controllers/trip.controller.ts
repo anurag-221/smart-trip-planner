@@ -66,3 +66,11 @@ export async function approveMemberHandler(
   approveMember(tripId, userId);
   return reply.send({ status: "APPROVED" });
 }
+
+export async function getAllTripsHandler(req: any) {
+  const userId = req.user?.id;
+
+  // TEMP: return all trips for now
+  // Later filter by membership
+  return req.server.trips || [];
+}
