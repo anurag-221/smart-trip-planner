@@ -74,7 +74,7 @@ export default function TripDetailPage({
         )}
 
         {activeTab === "chat" && (
-          <Chat />
+          <Chat tripId={tripId} />
         )}
       </section>
     </main>
