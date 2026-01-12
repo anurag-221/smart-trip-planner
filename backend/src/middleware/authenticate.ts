@@ -1,27 +1,29 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { verifyToken } from "../auth/jwt";
 import { User } from "../auth/user.types";
+import { AuthenticatedRequest } from "../auth/authenticated-request";
 
 export async function authenticate(
   req: FastifyRequest,
   reply: FastifyReply
 ) {
+  const authReq = req as AuthenticatedRequest;
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
+    // READ TOKEN FROM COOKIE (NOT HEADER)
+    const token = authReq?.cookies?.auth_token;
+
+    if (!token) {
       return reply.status(401).send({ error: "UNAUTHORIZED" });
     }
 
-    const token = authHeader.replace("Bearer ", "");
     const payload = verifyToken(token) as any;
 
-    // ✅ attach user dynamically
-    (req as any).user = {
+    authReq.user = {
       id: payload.sub,
       email: payload.email,
       name: payload.name,
     } satisfies User;
-  } catch {
+  } catch (err) {
     return reply.status(401).send({ error: "INVALID_TOKEN" });
   }
 }

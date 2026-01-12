@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import { useTripSocket } from "@/hooks/useTripSocket";
+import { apiFetch } from "@/lib/api";
 
 export type Message = {
   id: string;
@@ -20,6 +21,24 @@ export default function Chat({ tripId }: { tripId: string }) {
   const [showNewMsg, setShowNewMsg] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+useEffect(() => {
+  console.log("Chat useEffect running");
+
+  async function loadMessages() {
+    console.log("📡 Calling messages API");
+    try {
+      const data = await apiFetch<Message[]>(
+        `/trips/${tripId}/messages`
+      );
+      console.log(" Messages loaded:", data);
+      setMessages(data);
+    } catch (err) {
+      console.error("❌ Failed to load messages", err);
+    }
+  }
+
+  loadMessages();
+}, [tripId]);
 
 
   const { sendMessage, sendTyping, sendStopTyping } = useTripSocket(tripId, (event) => {
