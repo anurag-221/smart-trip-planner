@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  messages  Message[]
+}
+
+model Trip {
+  id        String   @id
+  name      String
+  createdAt DateTime @default(now())
+
+  messages  Message[]
+}
+
+model Message {
+  id        String   @id
+  text      String
+  senderId  String
+  tripId    String
+  createdAt DateTime @default(now())
+
+  sender    User @relation(fields: [senderId], references: [id])
+  trip      Trip @relation(fields: [tripId], references: [id])
+
+  @@index([tripId])
+  @@index([createdAt])
+}
