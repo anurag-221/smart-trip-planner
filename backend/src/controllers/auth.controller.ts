@@ -19,5 +19,16 @@ export async function mockLogin(
 
   const token = signToken(user);
 
-  return reply.send({ token, user });
+  return reply
+  .setCookie("auth_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    // secure: process.env.NODE_ENV === "production",
+    domain: "localhost",
+    secure: false,
+  })
+  .send({
+    user
+  });
 }

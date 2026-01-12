@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+﻿import TempLogin from "@/components/LoginBtn";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -15,6 +16,7 @@ export default function HomePage() {
         >
           My Trips
         </Link>
+        <TempLogin />
       </header>
 
       {/* Hero */}

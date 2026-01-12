@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import WebSocket from "ws";
+import { messageService } from "../messages/message.service";
 
 const tripSockets = new Map<string, Set<WebSocket>>();
 
@@ -17,7 +18,7 @@ export async function realtimeRoutes(app: FastifyInstance) {
       const sockets = tripSockets.get(tripId)!;
       sockets.add(socket);
 
-      // ✅ SEND JOIN EVENT ONLY TO *OTHERS*
+      // SEND JOIN EVENT ONLY TO *OTHERS*
       sockets.forEach((client) => {
         if (
           client !== socket &&
@@ -50,10 +51,27 @@ export async function realtimeRoutes(app: FastifyInstance) {
     return;
   }
 
+  if (data.type === "CHAT_MESSAGE") {
+  const message = {
+    ...data.payload,
+    tripId,
+  };
+
+  // SAVE MESSAGE
+  messageService.save(message);
+
+  // BROADCAST TO OTHERS
+  sockets.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
+
   sockets.forEach((client) => {
     if (
       client.readyState === WebSocket.OPEN &&
-      client !== socket // 👈 don't echo typing back
+      client !== socket // don't echo typing back
     ) {
       client.send(JSON.stringify(data));
     }
@@ -63,7 +81,7 @@ export async function realtimeRoutes(app: FastifyInstance) {
       socket.on("close", () => {
         sockets.delete(socket);
 
-        // ✅ SEND LEAVE EVENT ONLY TO *OTHERS*
+        // SEND LEAVE EVENT ONLY TO *OTHERS*
         sockets.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
             client.send(

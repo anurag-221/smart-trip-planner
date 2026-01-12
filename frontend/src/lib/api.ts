@@ -1,22 +1,33 @@
 ﻿const API = process.env.NEXT_PUBLIC_API_URL;
 
-export async function apiFetch(
+export async function apiFetch<T>(
   url: string,
   options: RequestInit = {}
-) {
-  const token = localStorage.getItem("token");
+): Promise<T> {
+  if (typeof window === "undefined") {
+    throw new Error("apiFetch called on server");
+  }
+
+  const headers: HeadersInit = {
+    ...options.headers,
+  };
+
+  // Only set JSON header if body exists
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const res = await fetch(API + url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    credentials: "include", // ✅ THIS IS THE KEY FIX
+    headers,
   });
 
   if (!res.ok) {
-    throw new Error("API Error");
+    if (res.status === 401) {
+      console.warn("Unauthorized – not logged in");
+    }
+    throw new Error(`API Error: ${res.status}`);
   }
 
   return res.json();
