@@ -17,7 +17,7 @@ export default function TripsPage() {
 
   useEffect(() => {
     apiFetch("/trips")
-      .then((data) => setTrips(data || []))
+      .then((data) => setTrips((data as Trip[]) || []))
       .catch(() => setTrips([]))
       .finally(() => setLoading(false));
   }, []);

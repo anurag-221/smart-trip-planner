@@ -1,17 +1,41 @@
+import { prisma } from "../lib/prisma";
 import { Message } from "./message.types";
 
-const messagesByTrip = new Map<string, Message[]>();
-
 export const messageService = {
-  save(message: Message) {
-    if (!messagesByTrip.has(message.tripId)) {
-      messagesByTrip.set(message.tripId, []);
-    }
-
-    messagesByTrip.get(message.tripId)!.push(message);
+  async save(message: Message) {
+    await prisma.message.create({
+      data: {
+        id: message.id,
+        tripId: message.tripId,
+        senderId: message.senderId,
+        type: message.type,
+        text: message.text,
+        fileUrl: message.fileUrl,
+        createdAt: new Date(message.timestamp),
+      },
+    });
   },
 
-  getByTrip(tripId: string): Message[] {
-    return messagesByTrip.get(tripId) || [];
+  async getByTrip(tripId: string): Promise<Message[]> {
+    const rows = await prisma.message.findMany({
+      where: { tripId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        sender: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      tripId: row.tripId,
+      senderId: row.senderId,
+      senderName: row.sender.name,
+      type: row.type as Message["type"],
+      text: row.text ?? undefined,
+      fileUrl: row.fileUrl ?? undefined,
+      timestamp: row.createdAt.getTime(),
+    }));
   },
 };

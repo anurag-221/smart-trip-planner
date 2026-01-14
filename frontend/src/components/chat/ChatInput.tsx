@@ -56,7 +56,7 @@ export default function ChatInput({
 
       <button
         onClick={send}
-        className="px-4 py-2 bg-emerald-600 rounded"
+        className="px-4 py-2 bg-chat-me rounded"
       >
         Send
       </button>

@@ -26,9 +26,11 @@ model Trip {
 
 model Message {
   id        String   @id
-  text      String
-  senderId  String
   tripId    String
+  senderId  String
+  type      String
+  text      String?  
+  fileUrl   String?
   createdAt DateTime @default(now())
 
   sender    User @relation(fields: [senderId], references: [id])
