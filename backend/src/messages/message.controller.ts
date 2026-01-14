@@ -7,6 +7,6 @@ export async function getTripMessages(
 ) {
   const { tripId } = req.params as { tripId: string };
 
-  const messages = messageService.getByTrip(tripId);
-  reply.send(messages);
+  const messages = await messageService.getByTrip(tripId);
+  return reply.send(messages);
 }

@@ -1,0 +1,21 @@
+:root {
+  /* === Brand Colors === */
+  --brand-primary: 16 185 129;     /* emerald */
+  --brand-secondary: 14 165 233;   /* sky */
+  --brand-accent: 168 85 247;      /* violet */
+
+  /* === Backgrounds === */
+  --bg-app: 2 6 23;                /* slate-950 */
+  --bg-panel: 15 23 42;            /* slate-900 */
+  --bg-message-me: 86 41 95;
+  --bg-message-other: 30 41 59;    /* slate-800 */
+
+  /* === Text === */
+  --text-primary: 226 232 240;     /* slate-200 */
+  --text-secondary: 148 163 184;   /* slate-400 */
+
+  /* === Chat ticks === */
+  --tick-sent: 203 213 225;        /* slate-300 */
+  --tick-delivered: 148 163 184;   /* slate-400 */
+  --tick-seen: 34 211 238;
+}

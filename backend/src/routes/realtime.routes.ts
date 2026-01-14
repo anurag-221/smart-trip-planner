@@ -10,6 +10,12 @@ export async function realtimeRoutes(app: FastifyInstance) {
     { websocket: true },
     (socket, request) => {
       const { tripId } = request.params as any;
+      const {userId, name } = request.query as {userId: string; name: string};
+
+      if(!userId || !name ){
+        socket.close(1008, `Missing userId or name`);
+        return;
+      }
 
       if (!tripSockets.has(tripId)) {
         tripSockets.set(tripId, new Set());
@@ -33,49 +39,73 @@ export async function realtimeRoutes(app: FastifyInstance) {
         }
       });
 
-      socket.on("message", (raw) => {
-        let data;
+      socket.on("message", async (raw) => {
         try {
-          data = JSON.parse(raw.toString());
-        } catch {
-          return;
+          const data = JSON.parse(raw.toString());
+
+          if (
+            ![
+              "CHAT_MESSAGE",
+              "USER_TYPING",
+              "USER_STOPPED_TYPING",
+              "MESSAGE_SEEN",
+            ].includes(data.type)
+          ) {
+            return;
+          }
+
+          if (data.type === "MESSAGE_SEEN") {
+            sockets.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(data));
+              }
+            });
+            return;
+          }
+
+          if (data.type === "CHAT_MESSAGE") {
+            const message = {
+              id: data.payload.id, 
+              tripId,
+              senderId: userId,
+              senderName: name,
+              type: "text" as const,
+              text: data.payload.text,
+              fileUrl: undefined,
+              timestamp: Date.now(),
+            };
+
+            // persist
+            await messageService.save(message);
+
+            // broadcast canonical message
+            sockets.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    type: "CHAT_MESSAGE",
+                    payload: message,
+                  })
+                );
+              }
+            });
+
+            return;
+          }
+
+
+          // Typing events
+          sockets.forEach((client) => {
+            if (
+              client.readyState === WebSocket.OPEN &&
+              client !== socket
+            ) {
+              client.send(JSON.stringify(data));
+            }
+          });
+        } catch (err) {
+          console.error("WS handler crashed", err);
         }
-
-        if (
-    ![
-      "CHAT_MESSAGE",
-      "USER_TYPING",
-      "USER_STOPPED_TYPING",
-    ].includes(data.type)
-  ) {
-    return;
-  }
-
-  if (data.type === "CHAT_MESSAGE") {
-  const message = {
-    ...data.payload,
-    tripId,
-  };
-
-  // SAVE MESSAGE
-  messageService.save(message);
-
-  // BROADCAST TO OTHERS
-  sockets.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(data));
-    }
-  });
-}
-
-  sockets.forEach((client) => {
-    if (
-      client.readyState === WebSocket.OPEN &&
-      client !== socket // don't echo typing back
-    ) {
-      client.send(JSON.stringify(data));
-    }
-  });
       });
 
       socket.on("close", () => {
