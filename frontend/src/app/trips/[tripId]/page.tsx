@@ -31,7 +31,7 @@ export default function TripDetailPage({
 
           <div className="flex-1">
             <h1 className="font-semibold">
-              Trip #{tripId}
+              Trip
             </h1>
             <p className="text-xs text-slate-400">
               Collaborative Trip

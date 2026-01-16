@@ -2,34 +2,39 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
 
 export default function CreateTripPage() {
   const router = useRouter();
 
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const isValid =
-    title.trim().length > 0 &&
-    startDate.length > 0 &&
-    endDate.length > 0;
+    name.trim().length > 0 
+    // &&
+    // startDate.length > 0 &&
+    // endDate.length > 0;
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  if (!isValid) return;
 
-    if (!isValid) return;
-
-    // Backend wiring will be added later
-    console.log({
-      title,
-      startDate,
-      endDate,
+  try {
+    await apiFetch("/trips", {
+      method: "POST",
+      body: JSON.stringify({
+        name: name,
+      }),
     });
 
-    // Temporary navigation
     router.push("/trips");
+  } catch (err) {
+    console.error("Failed to create trip", err);
+    alert("Failed to create trip");
   }
+}
 
   return (
     <main className="min-h-screen bg-slate-950 text-white p-6">
@@ -56,15 +61,15 @@ export default function CreateTripPage() {
             </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Goa Vacation"
               className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-sm font-medium">
                 Start Date
@@ -88,7 +93,7 @@ export default function CreateTripPage() {
                 className="w-full rounded-lg bg-slate-900 border border-slate-800 px-3 py-2 focus:outline-none focus:border-emerald-500"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Actions */}
           <div className="flex items-center gap-4 pt-4">

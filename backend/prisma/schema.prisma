@@ -13,14 +13,17 @@ model User {
   name      String
   createdAt DateTime @default(now())
 
-  messages  Message[]
+  tripsOwned Trip[]  @relation("TripOwner")
+  messages   Message[]
 }
 
 model Trip {
   id        String   @id
   name      String
+  ownerId   String
   createdAt DateTime @default(now())
 
+  owner     User     @relation("TripOwner", fields: [ownerId], references: [id])
   messages  Message[]
 }
 

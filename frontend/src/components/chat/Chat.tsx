@@ -32,11 +32,16 @@ function normalizeMessage(raw: any): Message {
 
 export default function Chat({ tripId }: { tripId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [showNewMsg, setShowNewMsg] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const me = useMe();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const isAtBottomRef = useRef(true);
+
+
 
   /* ---------------- LOAD FROM DB ---------------- */
   useEffect(() => {
@@ -63,6 +68,12 @@ export default function Chat({ tripId }: { tripId: string }) {
 
   loadMessages();
 }, [tripId]);
+
+useEffect(() => {
+  if (isAtBottomRef.current) {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+}, [messages]);
 
  useEffect(() => {
   return () => {
@@ -184,9 +195,53 @@ export default function Chat({ tripId }: { tripId: string }) {
   }, 700); // WhatsApp-like delay
 }
 
+function handleScroll() {
+  const el = containerRef.current;
+  if (!el) return;
+
+  const threshold = 60; // px
+  isAtBottomRef.current =
+    el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+    if(isAtBottomRef.current){
+      setShowNewMsg(false);
+    }
+}
+
+function scrollToBottom(smooth = true) {
+  bottomRef.current?.scrollIntoView({
+    behavior: smooth ? "smooth" : "auto",
+  });
+}
+
+function formatDate(ts: number) {
+  return new Date(ts).toDateString();
+}
+
+useEffect(() => {
+  if (messages.length === 0) return;
+
+  // Initial open → instant scroll
+  scrollToBottom(false);
+}, []); // run ONCE
+
+useEffect(() => {
+  // If user is already at bottom → follow messages
+  if (isAtBottomRef.current) {
+    scrollToBottom(true);
+  }
+}, [messages]);
+
   return (
-    <div className="flex flex-col h-[70vh] bg-slate-900 border border-slate-800 rounded-xl">
-      <MessageList messages={messages} myUserId={me?.user?.id} />
+    <div className="flex flex-col h-[100dvh] md:h-[70dvh] bg-slate-900 border border-slate-800 rounded-xl">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto"
+      >
+        <MessageList messages={messages} myUserId={me?.user?.id} />
+        <div ref={bottomRef} />
+      </div>
 
       {typingUser && (
         <div className="px-4 pb-1 text-xs text-slate-400">
@@ -194,13 +249,30 @@ export default function Chat({ tripId }: { tripId: string }) {
         </div>
       )}
 
-      <div ref={bottomRef} />
+      {showNewMsg && (
+        <button
+          onClick={() =>
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="absolute bottom-20 left-1/2 -translate-x-1/2
+                    bg-emerald-600 text-white text-xs px-3 py-1 rounded-full shadow"
+        >
+          New message ↓
+        </button>
+      )}
 
-      <ChatInput
-        onSend={handleSend}
-        onTyping={handleTyping}
-        onStopTyping={() => {}}
-      />
+      <div
+        className="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-2"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <ChatInput
+          onSend={handleSend}
+          onTyping={handleTyping}
+          onStopTyping={() => {}}
+        />
+      </div>
     </div>
   );
 }

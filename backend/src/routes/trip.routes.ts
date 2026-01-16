@@ -4,8 +4,8 @@ import { authorizeTripRole } from "../middleware/authorizeTripRole";
 import {
   createTripHandler,
   getTripHandler,
-  joinTripHandler,
-  approveMemberHandler,
+  // joinTripHandler,
+  // approveMemberHandler,
   getAllTripsHandler,
 } from "../controllers/trip.controller";
 
@@ -18,25 +18,29 @@ export async function tripRoutes(app: FastifyInstance) {
 
    app.get(
     "/trips",
+    { preHandler: authenticate },
     getAllTripsHandler
   );
 
-  app.get("/trips/:tripId", getTripHandler);
-
-  app.post(
-    "/trips/:tripId/join",
+  app.get("/trips/:tripId", 
     { preHandler: authenticate },
-    joinTripHandler
+    getTripHandler
   );
 
-  app.post(
-    "/trips/:tripId/members/:userId/approve",
-    {
-      preHandler: [
-        authenticate,
-        authorizeTripRole("owner"),
-      ],
-    },
-    approveMemberHandler
-  );
+  // app.post(
+  //   "/trips/:tripId/join",
+  //   { preHandler: authenticate },
+  //   joinTripHandler
+  // );
+
+  // app.post(
+  //   "/trips/:tripId/members/:userId/approve",
+  //   {
+  //     preHandler: [
+  //       authenticate,
+  //       authorizeTripRole("owner"),
+  //     ],
+  //   },
+  //   approveMemberHandler
+  // );
 }

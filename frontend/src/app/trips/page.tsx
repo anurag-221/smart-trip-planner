@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/api";
 
 type Trip = {
   id: string;
-  title: string;
+  name: string;
   startDate?: string;
   endDate?: string;
 };
@@ -67,7 +67,7 @@ function TripCard({ trip }: { trip: Trip }) {
       className="block bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-emerald-500 transition"
     >
       <h3 className="font-semibold text-lg">
-        {trip.title}
+        {trip.name}
       </h3>
 
       {(trip.startDate || trip.endDate) && (

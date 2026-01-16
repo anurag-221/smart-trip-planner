@@ -1,5 +1,5 @@
-import { FastifyInstance } from "fastify";
-import WebSocket from "ws";
+import { FastifyInstance, FastifyRequest } from "fastify";
+import type { WebSocket } from "@fastify/websocket";
 import { messageService } from "../messages/message.service";
 
 const tripSockets = new Map<string, Set<WebSocket>>();
@@ -8,12 +8,15 @@ export async function realtimeRoutes(app: FastifyInstance) {
   app.get(
     "/ws/trips/:tripId",
     { websocket: true },
-    (socket, request) => {
-      const { tripId } = request.params as any;
-      const {userId, name } = request.query as {userId: string; name: string};
+    (socket: WebSocket, request: FastifyRequest) => {
+      const { tripId } = request.params as { tripId: string };
+      const { userId, name } = request.query as {
+        userId?: string;
+        name?: string;
+      };
 
-      if(!userId || !name ){
-        socket.close(1008, `Missing userId or name`);
+      if (!userId || !name) {
+        socket.close(1008, "Missing userId or name");
         return;
       }
 
@@ -24,16 +27,13 @@ export async function realtimeRoutes(app: FastifyInstance) {
       const sockets = tripSockets.get(tripId)!;
       sockets.add(socket);
 
-      // SEND JOIN EVENT ONLY TO *OTHERS*
+      // 🔔 JOIN (others only)
       sockets.forEach((client) => {
-        if (
-          client !== socket &&
-          client.readyState === WebSocket.OPEN
-        ) {
+        if (client !== socket && client.readyState === 1) {
           client.send(
             JSON.stringify({
               type: "USER_JOINED",
-              payload: { user: "Someone" },
+              payload: { user: name },
             })
           );
         }
@@ -54,18 +54,20 @@ export async function realtimeRoutes(app: FastifyInstance) {
             return;
           }
 
+          // 👁 Seen
           if (data.type === "MESSAGE_SEEN") {
             sockets.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
+              if (client.readyState === 1) {
                 client.send(JSON.stringify(data));
               }
             });
             return;
           }
 
+          // 💬 Chat message
           if (data.type === "CHAT_MESSAGE") {
             const message = {
-              id: data.payload.id, 
+              id: data.payload.id,
               tripId,
               senderId: userId,
               senderName: name,
@@ -75,12 +77,10 @@ export async function realtimeRoutes(app: FastifyInstance) {
               timestamp: Date.now(),
             };
 
-            // persist
             await messageService.save(message);
 
-            // broadcast canonical message
             sockets.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
+              if (client.readyState === 1) {
                 client.send(
                   JSON.stringify({
                     type: "CHAT_MESSAGE",
@@ -89,35 +89,29 @@ export async function realtimeRoutes(app: FastifyInstance) {
                 );
               }
             });
-
             return;
           }
 
-
-          // Typing events
+          // ✍ Typing
           sockets.forEach((client) => {
-            if (
-              client.readyState === WebSocket.OPEN &&
-              client !== socket
-            ) {
+            if (client !== socket && client.readyState === 1) {
               client.send(JSON.stringify(data));
             }
           });
         } catch (err) {
-          console.error("WS handler crashed", err);
+          console.error("❌ WS handler crashed", err);
         }
       });
 
       socket.on("close", () => {
         sockets.delete(socket);
 
-        // SEND LEAVE EVENT ONLY TO *OTHERS*
         sockets.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
+          if (client.readyState === 1) {
             client.send(
               JSON.stringify({
                 type: "USER_LEFT",
-                payload: { user: "Someone" },
+                payload: { user: name },
               })
             );
           }

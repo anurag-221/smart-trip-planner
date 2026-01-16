@@ -1,76 +1,28 @@
-import { v4 as uuid } from "uuid";
-import { trips, tripMembers } from "./trip.store";
-import { Trip } from "./trip.types";
+import { prisma } from "../lib/prisma";
 
-export function createTrip({
-  title,
-  startDate,
-  endDate,
-  isPublic,
-  ownerId,
-}: {
-  title: string;
-  startDate: string;
-  endDate: string;
-  isPublic: boolean;
-  ownerId: string;
-}): Trip {
-  const trip: Trip = {
-    id: uuid(),
-    title,
-    startDate,
-    endDate,
-    ownerId,
-    isPublic,
-  };
+export const tripService = {
+  async create(name: string, ownerId: string) {
+    return prisma.trip.create({
+      data: {
+        id: crypto.randomUUID(),
+        name,
+        ownerId,
+      },
+    });
+  },
 
-  trips.push(trip);
+  async getAllByUser(userId: string) {
+    return prisma.trip.findMany({
+      where: {
+        ownerId: userId, // later we’ll expand to members
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
 
-  tripMembers.push({
-    tripId: trip.id,
-    userId: ownerId,
-    role: "owner",
-    status: "approved",
-  });
-
-  return trip;
-}
-
-export function getTrip(tripId: string) {
-  return trips.find((t) => t.id === tripId);
-}
-
-export function getUserTripRole(tripId: string, userId: string) {
-  return tripMembers.find(
-    (m) =>
-      m.tripId === tripId &&
-      m.userId === userId &&
-      m.status === "approved"
-  );
-}
-
-export function requestToJoinTrip(tripId: string, userId: string) {
-  const exists = tripMembers.find(
-    (m) => m.tripId === tripId && m.userId === userId
-  );
-  if (exists) {
-    throw new Error("REQUEST_ALREADY_EXISTS");
-  }
-
-  tripMembers.push({
-    tripId,
-    userId,
-    role: "viewer",
-    status: "pending",
-  });
-}
-
-export function approveMember(tripId: string, userId: string) {
-  const member = tripMembers.find(
-    (m) => m.tripId === tripId && m.userId === userId
-  );
-  if (!member) throw new Error("MEMBER_NOT_FOUND");
-
-  member.status = "approved";
-  member.role = "collaborator";
-}
+  async getById(tripId: string) {
+    return prisma.trip.findUnique({
+      where: { id: tripId },
+    });
+  },
+};

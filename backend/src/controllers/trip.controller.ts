@@ -1,76 +1,44 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { AuthenticatedRequest } from "../auth/authenticated-request";
-import {
-  createTrip,
-  getTrip,
-  requestToJoinTrip,
-  approveMember,
-} from "../trips/trip.service";
 import { User } from "../auth/user.types";
+import { tripService } from "../trips/trip.service";
 
 export async function createTripHandler(
   req: FastifyRequest,
   reply: FastifyReply
 ) {
   const authReq = req as AuthenticatedRequest;
-  const { title, startDate, endDate, isPublic } = authReq.body as any;
+  const { name } = authReq.body as { name: string };
 
-  const trip = createTrip({
-    title,
-    startDate,
-    endDate,
-    isPublic,
-    ownerId: authReq.user!.id,
-  });
+  if (!name?.trim()) {
+    return reply.status(400).send({ error: "Trip name required" });
+  }
 
-  return reply.send(trip);
+  const trip = await tripService.create(name, authReq.user.id);
+  reply.send(trip);
 }
 
 export async function getTripHandler(
   req: FastifyRequest,
   reply: FastifyReply
 ) {
-    const authReq = req as AuthenticatedRequest;
+  const authReq = req as AuthenticatedRequest;
   const { tripId } = authReq.params as any;
-  const trip = getTrip(tripId);
+  const trip = await tripService.getById(tripId);
 
   if (!trip) {
     return reply.status(404).send({ error: "TRIP_NOT_FOUND" });
   }
 
-  if (!trip.isPublic && !authReq?.user) {
-    return reply.status(403).send({ error: "LOGIN_REQUIRED" });
-  }
-
   return reply.send(trip);
 }
 
-export async function joinTripHandler(
+
+export async function getAllTripsHandler(
   req: FastifyRequest,
   reply: FastifyReply
 ) {
-    const authReq = req as AuthenticatedRequest;
-
-  const { tripId } = authReq.params as any;
-  requestToJoinTrip(tripId, authReq?.user!.id);
-  return reply.send({ status: "REQUEST_SENT" });
-}
-
-export async function approveMemberHandler(
-  req: FastifyRequest,
-  reply: FastifyReply
-) {
-    const authReq = req as AuthenticatedRequest;
-
-  const { tripId, userId } = authReq.params as any;
-  approveMember(tripId, userId);
-  return reply.send({ status: "APPROVED" });
-}
-
-export async function getAllTripsHandler(req: any) {
-  const userId = req.user?.id;
-
-  // TEMP: return all trips for now
-  // Later filter by membership
-  return req.server.trips || [];
+  const authReq = req as AuthenticatedRequest;
+  const trips = await tripService.getAllByUser(authReq.user.id);
+  reply.send(trips);
 }
