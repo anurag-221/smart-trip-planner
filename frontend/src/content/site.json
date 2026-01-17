@@ -1,0 +1,68 @@
+{
+    "nav": {
+    "logo": {
+      "text": "SmartTrip",
+      "href": "/"
+    },
+    "links": [
+      { "label": "Features", "href": "/#features" },
+      { "label": "Trips", "href": "/trips" },
+      { "label": "Pricing", "href": "/pricing" }
+    ],
+    "auth": {
+      "login": {
+        "label": "Login",
+        "href": "/login"
+      }
+    }
+  },
+  "hero": {
+    "slides": [
+      {
+        "image": "/images/hero/hero-1.webp",
+        "alt": "Mountain trip",
+        "title": "Plan trips together.",
+        "highlight": "Effortlessly.",
+        "subtitle": "Chat, split expenses, and organize journeys with your friends — all in one place.",
+        "primaryCta": {
+          "label": "Create a Trip",
+          "href": "/trips/create"
+        },
+        "secondaryCta": {
+          "label": "Explore Trips",
+          "href": "/trips"
+        }
+      },
+      {
+        "image": "/images/hero/hero-2.jpg",
+        "alt": "Beach trip",
+        "title": "Beach adventures made simple.",
+        "highlight": "Together.",
+        "subtitle": "Coordinate plans, manage costs, and enjoy stress-free seaside trips.",
+        "primaryCta": {
+          "label": "Start Planning",
+          "href": "/trips/create"
+        },
+        "secondaryCta": {
+          "label": "View Trips",
+          "href": "/trips"
+        }
+      },
+      {
+        "image": "/images/hero/hero-3.jpg",
+        "alt": "City exploration",
+        "title": "Explore cities smarter.",
+        "highlight": "As a group.",
+        "subtitle": "Keep everyone aligned with shared itineraries and real-time updates.",
+        "primaryCta": {
+          "label": "Create a Trip",
+          "href": "/trips/create"
+        },
+        "secondaryCta": {
+          "label": "Explore Trips",
+          "href": "/trips"
+        }
+      }
+    ]
+  }
+}

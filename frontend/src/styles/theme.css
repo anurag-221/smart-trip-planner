@@ -1,4 +1,28 @@
 :root {
+  /* Backgrounds */
+  --bg-main: #0b0f14;
+  --bg-surface: #111827;
+  --bg-glass: rgba(17, 24, 39, 0.6);
+
+  /* Brand */
+  --brand-primary: #10b981;
+  --brand-primary-hover: #34d399;
+
+  /* Text */
+  --text-main: #ffffff;
+  --text-muted: #9ca3af;
+
+  /* Chat status */
+  --status-sent: #9ca3af;
+  --status-delivered: #cbd5e1;
+  --status-seen: #38bdf8;
+
+  /* Effects */
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+:root {
   /* === Brand Colors === */
   --brand-primary: 16 185 129;     /* emerald */
   --brand-secondary: 14 165 233;   /* sky */

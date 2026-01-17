@@ -49,8 +49,8 @@ model TripMember {
   id        String   @id @default(uuid())
   tripId    String
   userId    String
-  role      String // owner | collaborator | viewer
-  status    String // pending | approved
+  role      TripRole
+  status    JoinStatus
   createdAt DateTime @default(now())
 
   trip Trip @relation(fields: [tripId], references: [id])
@@ -58,4 +58,14 @@ model TripMember {
 
   @@unique([tripId, userId])
   @@index([tripId])
+}
+
+enum TripRole {
+  OWNER
+  MEMBER
+}
+
+enum JoinStatus {
+  PENDING
+  APPROVED
 }
