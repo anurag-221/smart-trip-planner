@@ -16,7 +16,13 @@ export default function HomePage() {
         >
           My Trips
         </Link>
-        <TempLogin />
+        <Link
+          href="http://localhost:5000/api/auth/google"
+          className="bg-white text-black px-4 py-2 rounded-lg"
+        >
+          Continue with Google
+        </Link>
+
       </header>
 
       {/* Hero */}

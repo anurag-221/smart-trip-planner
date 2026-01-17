@@ -6,7 +6,7 @@ import { AuthenticatedRequest } from "../auth/authenticated-request";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post("/auth/login", mockLogin);
-  app.post("/auth/google", googleLogin);
+  app.get("/auth/google/callback", googleLogin);
   app.get(
     "/auth/me",
     { preHandler: authenticate },

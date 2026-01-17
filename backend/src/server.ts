@@ -10,33 +10,48 @@ import { realtimeRoutes } from "./routes/realtime.routes";
 import fastifyWebsocket from "@fastify/websocket";
 import { messageRoutes } from "./routes/message.routes";
 import fastifyCookie from "@fastify/cookie";
-
-
-// export async function authPlugin(app: FastifyInstance) {
-//   app.decorateRequest("user", null);
-// }
-
+import fastifyOauth2 from "@fastify/oauth2";
 
 const app = Fastify({ logger: true });
 
 async function start() {
-   app.register(fastifyCookie, {
-  secret: process.env.COOKIE_SECRET || "super-secret",
-});
+  await app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET || "super-secret",
+  });
+
+
   await app.register(cors, {
     origin: "http://localhost:3000",
     credentials : true,
   });
+
+  await app.register(fastifyOauth2, {
+        name: "googleOAuth2",
+        scope: ["profile", "email"],
+        credentials: {
+          client: {
+            id: process.env.GOOGLE_CLIENT_ID!,
+            secret: process.env.GOOGLE_CLIENT_SECRET!,
+          },
+          auth: fastifyOauth2.GOOGLE_CONFIGURATION,
+        },
+        startRedirectPath: "/api/auth/google",
+        callbackUri: "http://localhost:5000/api/auth/google/callback",
+      });
+
+
+  // await app.register(googleOAuthPlugin);
+
   
-  await app.register(fastifyWebsocket);
-//   await app.register(authPlugin);
   await app.register(protectedRoutes, { prefix: "/api" });
   await app.register(authRoutes, { prefix: "/api" });
   await app.register(tripRoutes, { prefix: "/api" });
   await app.register(placeRoutes, { prefix: "/api" });
   await app.register(expenseRoutes, { prefix: "/api" });
   app.register(messageRoutes, { prefix: "/api" });
-  // await app.register(wsPlugin);
+
+
+  await app.register(fastifyWebsocket);
   await app.register(realtimeRoutes);
 
   app.get("/health", async () => {

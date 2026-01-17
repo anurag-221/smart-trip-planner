@@ -39,7 +39,7 @@ export async function realtimeRoutes(app: FastifyInstance) {
         }
       });
 
-      socket.on("message", async (raw) => {
+      socket.on("message", async (raw: any) => {
         try {
           const data = JSON.parse(raw.toString());
 

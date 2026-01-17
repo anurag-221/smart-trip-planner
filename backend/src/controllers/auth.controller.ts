@@ -12,7 +12,7 @@ export async function mockLogin(
   }
 
   const user = {
-    id: email, // temp
+    id: email,
     email,
     name,
   };
@@ -20,15 +20,11 @@ export async function mockLogin(
   const token = signToken(user);
 
   return reply
-  .setCookie("auth_token", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    // secure: process.env.NODE_ENV === "production",
-    domain: "localhost",
-    secure: false,
-  })
-  .send({
-    user
-  });
+    .setCookie("auth_token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: false,
+    })
+    .send({ user });
 }

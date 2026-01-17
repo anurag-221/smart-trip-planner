@@ -13,8 +13,9 @@ model User {
   name      String
   createdAt DateTime @default(now())
 
-  tripsOwned Trip[]  @relation("TripOwner")
-  messages   Message[]
+  tripsOwned  Trip[]       @relation("TripOwner")
+  messages    Message[]
+  tripMembers TripMember[]
 }
 
 model Trip {
@@ -23,8 +24,9 @@ model Trip {
   ownerId   String
   createdAt DateTime @default(now())
 
-  owner     User     @relation("TripOwner", fields: [ownerId], references: [id])
-  messages  Message[]
+  owner    User         @relation("TripOwner", fields: [ownerId], references: [id])
+  messages Message[]
+  members  TripMember[]
 }
 
 model Message {
@@ -32,13 +34,28 @@ model Message {
   tripId    String
   senderId  String
   type      String
-  text      String?  
+  text      String?
   fileUrl   String?
   createdAt DateTime @default(now())
 
-  sender    User @relation(fields: [senderId], references: [id])
-  trip      Trip @relation(fields: [tripId], references: [id])
+  sender User @relation(fields: [senderId], references: [id])
+  trip   Trip @relation(fields: [tripId], references: [id])
 
   @@index([tripId])
   @@index([createdAt])
+}
+
+model TripMember {
+  id        String   @id @default(uuid())
+  tripId    String
+  userId    String
+  role      String // owner | collaborator | viewer
+  status    String // pending | approved
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([tripId, userId])
+  @@index([tripId])
 }
