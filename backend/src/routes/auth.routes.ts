@@ -15,4 +15,11 @@ export async function authRoutes(app: FastifyInstance) {
       reply.send({ user: authReq.user });
     }
   );
+  app.post("/auth/logout", async (_req, reply) => {
+  reply
+    .clearCookie("auth_token", {
+      path: "/",
+    })
+    .send({ success: true });
+});
 }

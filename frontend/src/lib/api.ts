@@ -19,7 +19,7 @@ export async function apiFetch<T>(
 
   const res = await fetch(API + url, {
     ...options,
-    credentials: "include", // ✅ THIS IS THE KEY FIX
+    credentials: "include",
     headers,
   });
 

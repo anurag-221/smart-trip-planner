@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import content from "@/content/site.json";
 import Image from "next/image";
+import content from "@/content/site.json";
+import { useAuth } from "@/context/AuthContext";
+import GoogleLoginButton from "@/components/common/GoogleLoginBtn";
+import UserMenuDesktop from "../auth/UserMenuDesktop";
+import UserMenuMobile from "../auth/UserMenuMobile";
+import NavbarSkeleton from "./NavbarSkelton"
 
 export default function Navbar() {
   const { nav } = content;
   const [open, setOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -30,87 +36,28 @@ export default function Navbar() {
               {nav.logo.text}
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              {nav.links.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm text-[var(--text-muted)] hover:text-white transition"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Auth */}
-            <div className="hidden md:block">
-              <Link
-                href={nav.auth.login.href}
-                className="
-                  px-5 py-2 rounded-lg text-sm font-medium
-                  bg-white text-black
-                  hover:bg-slate-200 transition flex items-center justify-center gap-3
-        w-full max-w-sm
-        border border-slate-300
-        
-                "
-              >
-                <Image
-                  src="/images/google-logo.svg"
-                  alt="Google"
-                  width={18}
-                  height={18}
-                  priority
-                />
-                <span>{nav.auth.login.label}</span>
-              </Link>
-            </div>
-
-            {/* Mobile toggle */}
-            <button
-              onClick={() => setOpen(!open)}
-              className="md:hidden text-white"
-              aria-label="Toggle menu"
-            >
-              ☰
-            </button>
+           {/* Auth */}
+          <div className="hidden md:block">
+            {loading ? (
+                <NavbarSkeleton />
+              ) : user ? (
+                <UserMenuDesktop/>
+              ) : (
+                <GoogleLoginButton />
+              )}
           </div>
 
-          {/* Mobile menu */}
-          {open && (
-            <div className="md:hidden border-t border-[var(--border-soft)]">
-              <nav className="flex flex-col px-6 py-4 gap-4">
-                {nav.links.map((link) => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="text-sm text-[var(--text-muted)] hover:text-white"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-
-                <Link
-                  href={nav.auth.login.href}
-                  className="
-                    mt-2 text-center px-4 py-2 rounded-lg
-                    bg-white text-black font-medium
-                  "
-                >
-                  <Image
-                    src="/images/google-logo.svg"
-                    alt="Google"
-                    width={18}
-                    height={18}
-                    priority
-                  />
-                  <span>{nav.auth.login.label}</span>
-                </Link>
-              </nav>
-            </div>
-          )}
+          {/* Mobile */}
+          <div className="md:hidden">
+            {loading ? (
+                <NavbarSkeleton />
+              ) : user ? (
+                <UserMenuMobile/>
+              ) : (
+                <GoogleLoginButton />
+              )}
+          </div>
+        </div>
         </div>
       </div>
     </header>
