@@ -1,11 +1,12 @@
 ﻿import GoogleLoginButton from "@/components/common/GoogleLoginBtn";
 import Link from "next/link";
 import HeroSlider from "@/components/home/HeroSlider";
+import PageContainer from "@/components/layout/PageContainer";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <PageContainer className="bg-slate-950 text-white">
       <HeroSlider />
-    </main>
+    </PageContainer>
   );
 }

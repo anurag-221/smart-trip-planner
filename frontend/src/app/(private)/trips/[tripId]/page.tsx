@@ -5,6 +5,8 @@ import Link from "next/link";
 import Itinerary from "@/components/itinerary/Itinerary";
 import Expenses from "@/components/expenses/Expenses";
 import Chat from "@/components/chat/Chat";
+import PageContainer from "@/components/layout/PageContainer";
+
 
 
 type Tab = "itinerary" | "expenses" | "chat";
@@ -18,7 +20,7 @@ export default function TripDetailPage({
   const [activeTab, setActiveTab] = useState<Tab>("itinerary");
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <PageContainer className=" bg-slate-950 text-white">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-slate-950 border-b border-slate-800">
         <div className="p-4 flex items-center gap-4">
@@ -77,7 +79,7 @@ export default function TripDetailPage({
           <Chat tripId={tripId} />
         )}
       </section>
-    </main>
+    </PageContainer>
   );
 }
 

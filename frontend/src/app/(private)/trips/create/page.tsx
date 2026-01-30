@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import PageContainer from "@/components/layout/PageContainer";
 
 export default function CreateTripPage() {
   const router = useRouter();
@@ -37,17 +38,17 @@ export default function CreateTripPage() {
 }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-xl mx-auto space-y-8">
+    <PageContainer className=" bg-slate-950 text-white">
+      <div className="max-w-xl mx-auto space-y-8 mt-4">
         {/* Header */}
-        <header className="space-y-2">
+        <div className="space-y-2">
           <h1 className="text-2xl font-bold">
             Create a Trip
           </h1>
           <p className="text-slate-400">
             Plan your journey and invite others to collaborate.
           </p>
-        </header>
+        </div>
 
         {/* Form */}
         <form
@@ -119,6 +120,6 @@ export default function CreateTripPage() {
           </div>
         </form>
       </div>
-    </main>
+    </PageContainer>
   );
 }

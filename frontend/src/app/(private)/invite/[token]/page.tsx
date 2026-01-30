@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { API_BASE } from "@/config/urls";
+import PageContainer from "@/components/layout/PageContainer";
 
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
@@ -40,8 +41,8 @@ export default function InvitePage() {
   }, [user, loading, token, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center text-white">
+    <PageContainer className="flex items-center justify-center text-white">
       Processing invite…
-    </div>
+    </PageContainer>
   );
 }

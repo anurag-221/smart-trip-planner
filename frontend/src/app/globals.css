@@ -15,7 +15,11 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-top: env(safe-area-inset-top);
 }
-
+:root {
+  --navbar-height: 88px; /* adjust if navbar height changes */
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
 
 *{
     -webkit-tap-highlight-color: transparent;

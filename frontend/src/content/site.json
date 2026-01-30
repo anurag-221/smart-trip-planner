@@ -2,7 +2,8 @@
     "nav": {
     "logo": {
       "text": "SmartTrip",
-      "href": "/"
+      "href": "/",
+      "image": "/images/logo.png"
     },
     "links": [
       { "label": "Features", "href": "/#features" },

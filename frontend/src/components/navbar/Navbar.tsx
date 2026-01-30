@@ -34,6 +34,7 @@ export default function Navbar() {
               className="text-lg font-bold tracking-wide text-white"
             >
               {nav.logo.text}
+              {/* <Image src={nav.logo.image} alt={nav.logo.text} width={24} height={24}/> */}
             </Link>
 
            {/* Auth */}

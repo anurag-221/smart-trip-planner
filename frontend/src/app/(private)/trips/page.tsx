@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { API_URLS, API_BASE } from "@/config/urls";
+import PageContainer from "@/components/layout/PageContainer";
 
 type Trip = {
   id: string;
@@ -25,9 +26,9 @@ export default function TripsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
+    <PageContainer className="bg-slate-950 text-white">
       {/* Header */}
-      <header className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 mt-4">
         <h1 className="text-2xl font-bold">Your Trips</h1>
 
         <Link
@@ -36,17 +37,13 @@ export default function TripsPage() {
         >
           + Create Trip
         </Link>
-      </header>
+      </div>
 
       {/* Loading */}
-      {loading && (
-        <div className="text-slate-400">Loading trips...</div>
-      )}
+      {loading && <div className="text-slate-400">Loading trips...</div>}
 
       {/* Empty State */}
-      {!loading && trips.length === 0 && (
-        <EmptyState />
-      )}
+      {!loading && trips.length === 0 && <EmptyState />}
 
       {/* Trips List */}
       {!loading && trips.length > 0 && (
@@ -56,7 +53,7 @@ export default function TripsPage() {
           ))}
         </div>
       )}
-    </main>
+    </PageContainer>
   );
 }
 
@@ -68,9 +65,7 @@ function TripCard({ trip }: { trip: Trip }) {
       href={`/trips/${trip.id}`}
       className="block bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-emerald-500 transition"
     >
-      <h3 className="font-semibold text-lg">
-        {trip.name}
-      </h3>
+      <h3 className="font-semibold text-lg">{trip.name}</h3>
 
       {(trip.startDate || trip.endDate) && (
         <p className="text-sm text-slate-400 mt-1">
@@ -86,13 +81,11 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center text-center py-24 space-y-4">
       <div className="text-4xl">🧳</div>
 
-      <h2 className="text-xl font-semibold">
-        No trips yet
-      </h2>
+      <h2 className="text-xl font-semibold">No trips yet</h2>
 
       <p className="text-slate-400 max-w-sm">
-        Start planning your next adventure.
-        Create a trip and collaborate with friends.
+        Start planning your next adventure. Create a trip and collaborate with
+        friends.
       </p>
 
       <Link

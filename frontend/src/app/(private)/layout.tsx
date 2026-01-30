@@ -34,7 +34,7 @@ export default function ProtectedLayout({
   return (
     <>
       <SwipeBack />
-      <PageTransition><main className="pb-16">{children}</main></PageTransition>
+      <PageTransition>{children}</PageTransition>
       <BottomNav />
     </>
   );
