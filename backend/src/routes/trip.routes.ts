@@ -35,11 +35,11 @@ export async function tripRoutes(app: FastifyInstance) {
     getInviteLinkHandler
   );
 
-    app.post(
-    "/trips/join/:token",
-    { preHandler: authenticate },
-    joinByTokenHandler
-  );
+   app.post(
+  "/trips/join",
+  { preHandler: authenticate },
+  joinByTokenHandler
+);
 
   app.get(
     "/trips/:tripId/members/pending",

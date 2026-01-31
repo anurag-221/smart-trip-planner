@@ -7,26 +7,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id
-  email     String   @unique
+model Place {
+  id        String   @id @default(uuid())
+  tripId    String
+  day       Int
   name      String
+  latitude  Float
+  longitude Float
+  order     Int
+  createdBy String
   createdAt DateTime @default(now())
 
-  tripsOwned  Trip[]       @relation("TripOwner")
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  creator   User     @relation(fields: [createdBy], references: [id])
+
+  @@index([tripId])
+  @@unique([tripId, day, order]) // Ensure order is unique per day per trip
+}
+
+model User {
+  id          String       @id
+  email       String       @unique
+  name        String
+  createdAt   DateTime     @default(now())
   messages    Message[]
+  tripsOwned  Trip[]       @relation("TripOwner")
   tripMembers TripMember[]
+  places      Place[]
 }
 
 model Trip {
-  id        String   @id
+  id        String       @id
   name      String
   ownerId   String
-  createdAt DateTime @default(now())
-
-  owner    User         @relation("TripOwner", fields: [ownerId], references: [id])
-  messages Message[]
-  members  TripMember[]
+  createdAt DateTime     @default(now())
+  messages  Message[]
+  owner     User         @relation("TripOwner", fields: [ownerId], references: [id])
+  members   TripMember[]
+  places   Place[]
 }
 
 model Message {
@@ -37,24 +55,22 @@ model Message {
   text      String?
   fileUrl   String?
   createdAt DateTime @default(now())
-
-  sender User @relation(fields: [senderId], references: [id])
-  trip   Trip @relation(fields: [tripId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id])
+  trip      Trip     @relation(fields: [tripId], references: [id])
 
   @@index([tripId])
   @@index([createdAt])
 }
 
 model TripMember {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   tripId    String
   userId    String
   role      TripRole
   status    JoinStatus
-  createdAt DateTime @default(now())
-
-  trip Trip @relation(fields: [tripId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  trip      Trip       @relation(fields: [tripId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
 
   @@unique([tripId, userId])
   @@index([tripId])

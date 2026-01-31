@@ -17,3 +17,13 @@ export function signToken(user: User) {
 export function verifyToken(token: string) {
   return jwt.verify(token, env.JWT_SECRET);
 }
+
+export type InvitePayload = { tripId: string; inviterUserId: string };
+
+export function signInviteToken(payload: InvitePayload): string {
+  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: "30d" });
+}
+
+export function verifyInviteToken(token: string): InvitePayload {
+  return jwt.verify(token, env.JWT_SECRET) as InvitePayload;
+}

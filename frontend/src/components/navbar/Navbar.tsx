@@ -8,7 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import GoogleLoginButton from "@/components/common/GoogleLoginBtn";
 import UserMenuDesktop from "../auth/UserMenuDesktop";
 import UserMenuMobile from "../auth/UserMenuMobile";
-import NavbarSkeleton from "./NavbarSkelton"
+import NavbarSkeleton from "./NavbarSkelton";
+import NotificationBell from "../notifications/NotificationBell";
 
 export default function Navbar() {
   const { nav } = content;
@@ -38,22 +39,28 @@ export default function Navbar() {
             </Link>
 
            {/* Auth */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center space-x-4">
             {loading ? (
                 <NavbarSkeleton />
               ) : user ? (
-                <UserMenuDesktop/>
+                <>
+                  <NotificationBell />
+                  <UserMenuDesktop/>
+                </>
               ) : (
                 <GoogleLoginButton />
               )}
           </div>
 
           {/* Mobile */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center space-x-4">
             {loading ? (
                 <NavbarSkeleton />
               ) : user ? (
-                <UserMenuMobile/>
+                <>
+                  <NotificationBell />
+                  <UserMenuMobile/>
+                </>
               ) : (
                 <GoogleLoginButton />
               )}

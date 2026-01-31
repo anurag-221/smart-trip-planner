@@ -28,7 +28,7 @@ export async function getPlacesHandler(
   reply: FastifyReply
 ) {
   const { tripId } = req.params as any;
-  const data = getPlacesByTrip(tripId);
+  const data = await getPlacesByTrip(tripId);
   return reply.send(data);
 }
 

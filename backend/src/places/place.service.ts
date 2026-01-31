@@ -1,10 +1,9 @@
-import { v4 as uuid } from "uuid";
-import { places } from "./place.store";
+import { prisma } from "../lib/prisma";
 import { Place } from "./place.types";
 import { broadcastToTrip } from "../realtime/broadcast";
 
 
-export function addPlace({
+export async function addPlace({
   tripId,
   day,
   name,
@@ -18,34 +17,31 @@ export function addPlace({
   latitude: number;
   longitude: number;
   createdBy: string;
-}): Place {
-  const dayPlaces = places.filter(
-    (p) => p.tripId === tripId && p.day === day
-  );
+}): Promise<Place> {
+  const dayPlacesCount = await prisma.place.count({
+    where: { tripId, day },
+  });
 
-  const newPlace: Place = {
-    id: uuid(),
-    tripId,
-    day,
-    name,
-    latitude,
-    longitude,
-    order: dayPlaces.length + 1,
-    createdBy,
-  };
+  const newPlace = await prisma.place.create({
+    data: {
+      tripId,
+      day,
+      name,
+      latitude,
+      longitude,
+      order: dayPlacesCount + 1,
+      createdBy,
+    },
+  });
 
-  places.push(newPlace);
   broadcastToTrip(tripId, {
-  type: "PLACE_ADDED",
-  place: newPlace,
-});
+    type: "PLACE_ADDED",
+    place: newPlace,
+  });
   return newPlace;
 }
 
-/**
- * Reorder places within the same day
- */
-export function reorderPlacesInDay({
+export async function reorderPlacesInDay({
   tripId,
   day,
   orderedPlaceIds,
@@ -54,19 +50,23 @@ export function reorderPlacesInDay({
   day: number;
   orderedPlaceIds: string[];
 }) {
-  const dayPlaces = places.filter(
-    (p) => p.tripId === tripId && p.day === day
-  );
+  const dayPlaces = await prisma.place.findMany({
+    where: { tripId, day },
+    orderBy: { order: "asc" },
+  });
 
   if (dayPlaces.length !== orderedPlaceIds.length) {
     throw new Error("INVALID_REORDER_PAYLOAD");
   }
 
-  orderedPlaceIds.forEach((id, index) => {
-    const place = dayPlaces.find((p) => p.id === id);
-    if (!place) throw new Error("PLACE_NOT_FOUND");
-    place.order = index + 1;
+  const transaction = orderedPlaceIds.map((id, index) => {
+    return prisma.place.update({
+      where: { id },
+      data: { order: index + 1 },
+    });
   });
+
+  await prisma.$transaction(transaction);
 
   return getPlacesByTrip(tripId);
 }
@@ -74,7 +74,7 @@ export function reorderPlacesInDay({
 /**
  * Move place to another day (append or insert)
  */
-export function movePlaceToDay({
+export async function movePlaceToDay({
   tripId,
   placeId,
   targetDay,
@@ -85,43 +85,57 @@ export function movePlaceToDay({
   targetDay: number;
   targetOrder?: number;
 }) {
-  const place = places.find(
-    (p) => p.tripId === tripId && p.id === placeId
-  );
+  const place = await prisma.place.findUnique({
+    where: { id: placeId, tripId },
+  });
   if (!place) throw new Error("PLACE_NOT_FOUND");
 
   const oldDay = place.day;
 
   // Remove from old day and reindex
-  const oldDayPlaces = places
-    .filter((p) => p.tripId === tripId && p.day === oldDay && p.id !== placeId)
-    .sort((a, b) => a.order - b.order);
-
-  oldDayPlaces.forEach((p, idx) => (p.order = idx + 1));
+  await prisma.place.updateMany({
+    where: {
+      tripId,
+      day: oldDay,
+      order: { gt: place.order },
+    },
+    data: {
+      order: { decrement: 1 },
+    },
+  });
 
   // Prepare target day
-  const targetDayPlaces = places
-    .filter((p) => p.tripId === tripId && p.day === targetDay)
-    .sort((a, b) => a.order - b.order);
-
-  place.day = targetDay;
-
-  if (!targetOrder || targetOrder > targetDayPlaces.length) {
+  if (!targetOrder || targetOrder > (await prisma.place.count({ where: { tripId, day: targetDay } }))) {
     // append
-    place.order = targetDayPlaces.length + 1;
+    const newOrder = (await prisma.place.count({ where: { tripId, day: targetDay } })) + 1;
+    await prisma.place.update({
+      where: { id: placeId },
+      data: { day: targetDay, order: newOrder },
+    });
   } else {
     // insert at position
-    targetDayPlaces.forEach((p) => {
-      if (p.order >= targetOrder) p.order += 1;
+    await prisma.place.updateMany({
+      where: {
+        tripId,
+        day: targetDay,
+        order: { gte: targetOrder },
+      },
+      data: {
+        order: { increment: 1 },
+      },
     });
-    place.order = targetOrder;
+    await prisma.place.update({
+      where: { id: placeId },
+      data: { day: targetDay, order: targetOrder },
+    });
   }
 
   return getPlacesByTrip(tripId);
 }
 
-export function getPlacesByTrip(tripId: string) {
-  return places
-    .filter((p) => p.tripId === tripId)
-    .sort((a, b) => a.day - b.day || a.order - b.order);
+export async function getPlacesByTrip(tripId: string) {
+  return prisma.place.findMany({
+    where: { tripId },
+    orderBy: [{ day: "asc" }, { order: "asc" }],
+  });
 }
