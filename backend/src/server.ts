@@ -7,6 +7,7 @@ import { protectedRoutes } from "./routes/protected.routes";
 import { placeRoutes } from "./routes/place.routes";
 import { expenseRoutes } from "./routes/expense.routes";
 import { realtimeRoutes } from "./routes/realtime.routes";
+import { notificationRoutes } from "./routes/notification.routes";
 import fastifyWebsocket from "@fastify/websocket";
 import { messageRoutes } from "./routes/message.routes";
 import fastifyCookie from "@fastify/cookie";
@@ -23,6 +24,7 @@ async function start() {
   await app.register(cors, {
     origin: "http://localhost:3000",
     credentials : true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   });
 
   await app.register(fastifyOauth2, {
@@ -49,6 +51,7 @@ async function start() {
   await app.register(placeRoutes, { prefix: "/api" });
   await app.register(expenseRoutes, { prefix: "/api" });
   app.register(messageRoutes, { prefix: "/api" });
+  await app.register(notificationRoutes, { prefix: "/api" });
 
 
   await app.register(fastifyWebsocket);

@@ -1,8 +1,8 @@
-import { FastifyInstance, FastifyRequest } from "fastify";
+import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { WebSocket } from "@fastify/websocket";
 import { messageService } from "../messages/message.service";
-
-const tripSockets = new Map<string, Set<WebSocket>>();
+import { tripSockets } from "../realtime/socket.store";
+import { realtimeService } from "../realtime/realtime.service";
 
 export async function realtimeRoutes(app: FastifyInstance) {
   app.get(
@@ -21,19 +21,19 @@ export async function realtimeRoutes(app: FastifyInstance) {
       }
 
       if (!tripSockets.has(tripId)) {
-        tripSockets.set(tripId, new Set());
+        tripSockets.set(tripId, new Map());
       }
 
-      const sockets = tripSockets.get(tripId)!;
-      sockets.add(socket);
+      const socketsByUserId = tripSockets.get(tripId)!;
+      socketsByUserId.set(userId, { socket, name });
 
       // 🔔 JOIN (others only)
-      sockets.forEach((client) => {
-        if (client !== socket && client.readyState === 1) {
-          client.send(
+      socketsByUserId.forEach((client, clientUserId) => {
+        if (clientUserId !== userId && client.socket.readyState === 1) {
+          client.socket.send(
             JSON.stringify({
               type: "USER_JOINED",
-              payload: { user: name },
+              payload: { userId, name },
             })
           );
         }
@@ -56,9 +56,9 @@ export async function realtimeRoutes(app: FastifyInstance) {
 
           // 👁 Seen
           if (data.type === "MESSAGE_SEEN") {
-            sockets.forEach((client) => {
-              if (client.readyState === 1) {
-                client.send(JSON.stringify(data));
+            socketsByUserId.forEach((client) => {
+              if (client.socket.readyState === 1) {
+                client.socket.send(JSON.stringify(data));
               }
             });
             return;
@@ -79,9 +79,9 @@ export async function realtimeRoutes(app: FastifyInstance) {
 
             await messageService.save(message);
 
-            sockets.forEach((client) => {
-              if (client.readyState === 1) {
-                client.send(
+            socketsByUserId.forEach((client) => {
+              if (client.socket.readyState === 1) {
+                client.socket.send(
                   JSON.stringify({
                     type: "CHAT_MESSAGE",
                     payload: message,
@@ -93,9 +93,9 @@ export async function realtimeRoutes(app: FastifyInstance) {
           }
 
           // ✍ Typing
-          sockets.forEach((client) => {
-            if (client !== socket && client.readyState === 1) {
-              client.send(JSON.stringify(data));
+          socketsByUserId.forEach((client, clientUserId) => {
+            if (clientUserId !== userId && client.socket.readyState === 1) {
+              client.socket.send(JSON.stringify(data));
             }
           });
         } catch (err) {
@@ -104,14 +104,14 @@ export async function realtimeRoutes(app: FastifyInstance) {
       });
 
       socket.on("close", () => {
-        sockets.delete(socket);
+        socketsByUserId.delete(userId);
 
-        sockets.forEach((client) => {
-          if (client.readyState === 1) {
-            client.send(
+        socketsByUserId.forEach((client) => {
+          if (client.socket.readyState === 1) {
+            client.socket.send(
               JSON.stringify({
                 type: "USER_LEFT",
-                payload: { user: name },
+                payload: { userId, name },
               })
             );
           }
@@ -119,4 +119,15 @@ export async function realtimeRoutes(app: FastifyInstance) {
       });
     }
   );
+
+  // HTTP endpoint (no /api prefix) for connected users; used internally by API route
+  app.get(
+    "/trips/:tripId/connected-users",
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { tripId } = req.params as { tripId: string };
+      const connectedUsers = realtimeService.getConnectedUsers(tripId);
+      return reply.send(connectedUsers);
+    }
+  );
 }
+

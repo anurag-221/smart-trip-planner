@@ -22,7 +22,7 @@ export const messageService = {
       orderBy: { createdAt: "asc" },
       include: {
         sender: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, image: true },
         },
       },
     });
@@ -32,6 +32,7 @@ export const messageService = {
       tripId: row.tripId,
       senderId: row.senderId,
       senderName: row.sender.name,
+      senderImage: row.sender.image,
       type: row.type as Message["type"],
       text: row.text ?? undefined,
       fileUrl: row.fileUrl ?? undefined,

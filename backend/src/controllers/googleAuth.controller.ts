@@ -22,7 +22,7 @@ const token =
     }
   ).then((r) => r.json());
 
-  const { email, name } = userInfo;
+  const { email, name, picture } = userInfo as { email: string; name: string; picture?: string };
 
   if (!email) {
     return reply.status(400).send({ error: "GOOGLE_AUTH_FAILED" });
@@ -30,11 +30,15 @@ const token =
 
   const user = await prisma.user.upsert({
     where: { email },
-    update: { name },
+    update: { 
+        name,
+        image: picture // Update image on login
+    },
     create: {
       id: email,
       email,
       name,
+      image: picture,
     },
   });
 

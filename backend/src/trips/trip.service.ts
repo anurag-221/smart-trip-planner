@@ -1,9 +1,15 @@
 import { prisma } from "../lib/prisma";
 import { broadcastToTrip } from "../realtime/broadcast";
+import { notificationService } from "../notifications/notification.service";
 import { User } from "../auth/user.types";
 
 const TripRole = { OWNER: "OWNER" as const, MEMBER: "MEMBER" as const };
-const JoinStatus = { PENDING: "PENDING" as const, APPROVED: "APPROVED" as const };
+const JoinStatus = {
+  PENDING: "PENDING" as const,
+  APPROVED: "APPROVED" as const,
+  DECLINED: "DECLINED" as const,
+};
+
 
 export const tripService = {
   async createOrFindUser(userData: User) {
@@ -110,14 +116,138 @@ export const tripService = {
   async getPendingMembers(tripId: string) {
     return prisma.tripMember.findMany({
       where: { tripId, status: JoinStatus.PENDING },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true, email: true, image: true } } },
+    });
+  },
+
+  async getMembers(tripId: string) {
+    return prisma.tripMember.findMany({
+      where: { tripId, status: JoinStatus.APPROVED },
+      include: { user: { select: { id: true, name: true, email: true, image: true } } },
     });
   },
 
   async approveMember(tripId: string, userId: string) {
-    return prisma.tripMember.update({
-      where: { tripId_userId: { tripId, userId } },
-      data: { status: JoinStatus.APPROVED },
-    });
+  const existing = await prisma.tripMember.findUnique({
+    where: { tripId_userId: { tripId, userId } },
+  });
+
+  if (!existing || existing.status === JoinStatus.APPROVED) {
+    return existing;
+  }
+
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { name: true } });
+  const tripName = trip?.name || "Unknown Trip";
+
+  const member = await prisma.tripMember.update({
+    where: { tripId_userId: { tripId, userId } },
+    data: { status: JoinStatus.APPROVED },
+    include: { user: true },
+  });
+
+  broadcastToTrip(tripId, {
+    type: "MEMBER_APPROVED",
+    payload: {
+      tripId,
+      userId,
+      user: member.user,
+    },
+  });
+
+  await notificationService.create({
+    userId: userId,
+    tripId: tripId,
+    type: "MEMBER_APPROVED",
+    message: `Your request to join trip ${tripName} has been approved.`,
+  });
+
+  return member;
+},
+
+  async declineMember(tripId: string, userId: string) {
+  const member = await prisma.tripMember.update({
+    where: { tripId_userId: { tripId, userId } },
+    data: { status: JoinStatus.DECLINED },
+    include: { user: true },
+  });
+
+  const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { name: true } });
+  const tripName = trip?.name || "Unknown Trip";
+
+  // 🔔 realtime + notification event
+  broadcastToTrip(tripId, {
+    type: "MEMBER_DECLINED",
+    payload: {
+      tripId,
+      userId,
+      user: member.user,
+    },
+  });
+
+  await notificationService.create({
+    userId: userId,
+    tripId: tripId,
+    type: "MEMBER_DECLINED",
+    message: `Your request to join trip ${tripName} has been declined.`,
+  });
+
+  return member;
+},
+
+async reRequestMember(tripId: string, userId: string) {
+  const member = await prisma.tripMember.update({
+    where: { tripId_userId: { tripId, userId } },
+    data: { status: JoinStatus.PENDING },
+    include: { user: true },
+  });
+
+  broadcastToTrip(tripId, {
+    type: "MEMBER_RE_REQUESTED",
+    payload: {
+      tripId,
+      userId,
+      user: member.user,
+    },
+  });
+
+  return member;
+},
+
+  async removeMember(tripId: string, userId: string) {
+    try {
+      const removedMember = await prisma.tripMember.delete({
+        where: { tripId_userId: { tripId, userId } },
+        include: { user: true },
+      });
+
+      const trip = await prisma.trip.findUnique({ where: { id: tripId }, select: { name: true } });
+      const tripName = trip?.name || "Unknown Trip";
+
+
+      broadcastToTrip(tripId, {
+        type: "MEMBER_REMOVED",
+        payload: {
+          tripId,
+          userId,
+          name: removedMember.user.name,
+          tripName
+        },
+      });
+
+      await notificationService.create({
+        userId: userId,
+        tripId: tripId,
+        type: "MEMBER_REMOVED",
+        message: `You have been removed from trip ${tripName}.`,
+      });
+
+      return removedMember;
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        // Record not found, so they are already removed.
+        return null;
+      }
+      throw error;
+    }
   },
 };

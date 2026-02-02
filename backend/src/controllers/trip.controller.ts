@@ -3,6 +3,9 @@ import { AuthenticatedRequest } from "../auth/authenticated-request";
 import { tripService } from "../trips/trip.service";
 import { signInviteToken, verifyInviteToken } from "../auth/jwt";
 import { env } from "../config/env";
+import { realtimeService } from "../realtime/realtime.service";
+import { notificationService } from "../notifications/notification.service";
+import { broadcastToTrip } from "../realtime/broadcast";
 
 export async function createTripHandler(
   req: FastifyRequest,
@@ -120,6 +123,22 @@ export async function getPendingMembersHandler(
   return reply.send(pending);
 }
 
+export async function getMembersHandler(
+  req: FastifyRequest,
+  reply: FastifyReply
+) {
+  const authReq = req as AuthenticatedRequest;
+  const { tripId } = authReq.params as any;
+
+  const canAccess = await tripService.canAccessTrip(tripId, authReq.user.id);
+  if (!canAccess) {
+    return reply.status(403).send({ error: "FORBIDDEN" });
+  }
+
+  const members = await tripService.getMembers(tripId);
+  return reply.send(members);
+}
+
 export async function approveMemberHandler(
   req: FastifyRequest,
   reply: FastifyReply
@@ -133,6 +152,43 @@ export async function approveMemberHandler(
   }
 
   await tripService.approveMember(tripId, userId);
+  return reply.send({ success: true });
+}
+
+export async function declineMemberHandler(
+  req: FastifyRequest,
+  reply: FastifyReply
+) {
+  const authReq = req as AuthenticatedRequest;
+  const { tripId, userId } = authReq.params as any;
+
+  const isOwner = await tripService.isOwner(tripId, authReq.user.id);
+  if (!isOwner) {
+    return reply.status(403).send({ error: "OWNER_ONLY" });
+  }
+
+  await tripService.declineMember(tripId, userId);
+  return reply.send({ success: true });
+}
+
+export async function removeMemberHandler(
+  req: FastifyRequest,
+  reply: FastifyReply
+) {
+  const authReq = req as AuthenticatedRequest;
+  const { tripId, userId } = authReq.params as any;
+
+  const isOwner = await tripService.isOwner(tripId, authReq.user.id);
+  if (!isOwner) {
+    return reply.status(403).send({ error: "OWNER_ONLY" });
+  }
+
+  // Remove from DB (handles broadcast and notification internally)
+  await tripService.removeMember(tripId, userId);
+
+  // Disconnect from WebSocket (if connected)
+  realtimeService.disconnectUserFromTrip(tripId, userId);
+
   return reply.send({ success: true });
 }
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { Message } from "./Chat";
+import { Message } from "@/types/chat.types";
 import { MessageStatus } from "./MessageStatus";
 import { formatDateLabel } from "@/lib/date";
+import Avatar from "@/components/common/Avatar";
 
 export default function MessageList({ messages, myUserId }: { messages: Message[], myUserId?: string }) {
   if (messages.length === 0) {
@@ -43,7 +44,14 @@ export default function MessageList({ messages, myUserId }: { messages: Message[
                 `}
               >
                 {!isMe && (
-                  <p className="text-[11px] text-slate-300 mb-1">{msg.senderName}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Avatar name={msg.senderName} image={msg.senderImage} className="w-4 h-4 text-[8px]" />
+                    <p className="text-[11px]"
+                        style={{ color: msg.senderColor || "inherit" }}
+                    >
+                        {msg.senderName}
+                    </p>
+                  </div>
                 )}
                     <p>{msg.text}</p>
 

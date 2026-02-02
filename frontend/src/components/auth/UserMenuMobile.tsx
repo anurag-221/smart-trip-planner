@@ -4,17 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/common/Avatar";
 import { useAuth } from "@/context/AuthContext";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 export default function UserMenuMobile() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   if (!user) return null;
 
   return (
     <>
       <button onClick={() => setOpen(true)}>
-        <Avatar name={user.name} />
+        <Avatar name={user.name} image={user.image} />
       </button>
 
       {open && (
@@ -36,15 +38,18 @@ export default function UserMenuMobile() {
               p-6
             "
           >
-            <div className="flex items-center gap-3 mb-6">
-              <Avatar name={user.name} />
+            <button 
+              className="flex items-center gap-3 mb-6 w-full text-left hover:bg-white/5 p-2 -mx-2 rounded-lg transition-colors cursor-pointer"
+              onClick={() => setShowProfile(true)}
+            >
+              <Avatar name={user.name} image={user.image} />
               <div>
                 <p className="font-medium text-white">{user.name}</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {user.email}
                 </p>
               </div>
-            </div>
+            </button>
 
             <button
               onClick={logout}
@@ -54,7 +59,10 @@ export default function UserMenuMobile() {
             </button>
           </div>
         </div>
+
       )}
+      
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </>
   );
 }

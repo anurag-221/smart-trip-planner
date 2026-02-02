@@ -26,14 +26,17 @@ model Place {
 }
 
 model User {
-  id          String       @id
-  email       String       @unique
+  id          String           @id
+  email       String           @unique
   name        String
-  createdAt   DateTime     @default(now())
+  image       String?
+  createdAt   DateTime         @default(now())
   messages    Message[]
-  tripsOwned  Trip[]       @relation("TripOwner")
+  tripsOwned  Trip[]           @relation("TripOwner")
   tripMembers TripMember[]
   places      Place[]
+  notifications Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Trip {
@@ -45,6 +48,23 @@ model Trip {
   owner     User         @relation("TripOwner", fields: [ownerId], references: [id])
   members   TripMember[]
   places   Place[]
+  notifications Notification[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tripId    String?
+  trip      Trip?    @relation(fields: [tripId], references: [id])
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tripId])
 }
 
 model Message {
@@ -60,6 +80,18 @@ model Message {
 
   @@index([tripId])
   @@index([createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model TripMember {
@@ -84,4 +116,5 @@ enum TripRole {
 enum JoinStatus {
   PENDING
   APPROVED
+  DECLINED
 }

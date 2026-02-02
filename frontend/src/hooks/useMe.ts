@@ -5,6 +5,7 @@ export type Me = {
     user: {
         id: string;
         name: string;
+        image?: string;
     }
 };
 

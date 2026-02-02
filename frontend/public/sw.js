@@ -58,3 +58,35 @@ self.addEventListener("notificationclick", function (event) {
     );
   }
 });
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-notifications") {
+    event.waitUntil(syncNotifications());
+  }
+});
+
+async function syncNotifications() {
+  // In a real application, you would fetch the latest notification count from your API here
+  // For now, let's simulate an update.
+  const unreadCount = Math.floor(Math.random() * 10); // Simulate some unread count
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: "UNREAD_COUNT_UPDATE", payload: unreadCount });
+    });
+  });
+  if (navigator.setAppBadge) {
+    navigator.setAppBadge(unreadCount);
+  } else if (navigator.clearAppBadge) {
+    navigator.clearAppBadge();
+  }
+}
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  } else if (event.data && event.data.type === "TRIGGER_SYNC") {
+    event.waitUntil(
+      self.registration.sync.register("sync-notifications")
+    );
+  }
+});

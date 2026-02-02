@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { connectTripSocket } from "@/lib/websocket";
-import { Message } from "@/components/chat/Chat";
+import { Message } from "@/types/chat.types";
 
 type UserTypingPayload = {
   userId: string;
@@ -11,11 +11,14 @@ type UserTypingPayload = {
 
 type WSEvent =
   | { type: "CHAT_MESSAGE"; payload: Message }
-  | { type: "USER_JOINED"; payload: { user: string } }
-  | { type: "USER_LEFT"; payload: { user: string } }
+  | { type: "USER_JOINED"; payload: { userId: string; name: string } }
+  | { type: "USER_LEFT"; payload: { userId: string; name: string } }
   | { type: "USER_TYPING"; payload: UserTypingPayload }
   | { type: "USER_STOPPED_TYPING"; payload: UserTypingPayload }
-  | { type: "MESSAGE_SEEN", payload: {messageId: string; seenBy: string} };
+  | { type: "MESSAGE_SEEN", payload: {messageId: string; seenBy: string} }
+  | { type: "NEW_NOTIFICATION", payload: any }
+  | { type: "MEMBER_REMOVED", payload: { userId: string; name: string; tripId: string; tripName: string } }
+  | { type: "MEMBER_APPROVED", payload: { tripId: string; userId: string; user: { id: string; name: string } } };
 
 export function useTripSocket(
   tripId: string,
@@ -45,6 +48,11 @@ export function useTripSocket(
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === "NEW_NOTIFICATION") {
+          if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: "TRIGGER_SYNC" });
+          }
+        }
         onEventRef.current(data);
       } catch {}
     };

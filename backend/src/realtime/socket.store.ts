@@ -1,6 +1,4 @@
-import {WebSocket} from 'ws';
+import { WebSocket } from "ws";
 
-export const tripSockets = new Map<
-  string,
-  Set<WebSocket>
->();
+// tripId -> (userId -> { socket, name })
+export const tripSockets: Map<string, Map<string, { socket: WebSocket; name: string }>> = new Map();

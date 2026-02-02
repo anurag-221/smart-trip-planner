@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Avatar from "@/components/common/Avatar";
 import { useAuth } from "@/context/AuthContext";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 export default function UserMenuDesktop() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // close on outside click
@@ -26,7 +28,7 @@ export default function UserMenuDesktop() {
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(!open)}>
-        <Avatar name={user.name} />
+        <Avatar name={user.name} image={user.image} />
       </button>
 
       {open && (
@@ -51,6 +53,18 @@ export default function UserMenuDesktop() {
           </div>
 
           <div className="border-t border-[var(--border-soft)]" />
+          
+          <button
+             onClick={() => {
+                 setOpen(false);
+                 setShowProfile(true);
+             }}
+             className="w-full text-left px-4 py-2 text-sm text-[var(--text-muted)] hover:bg-white/5"
+          >
+             Edit Profile
+          </button>
+
+          <div className="border-t border-[var(--border-soft)]" />
 
           <button
             onClick={logout}
@@ -64,6 +78,8 @@ export default function UserMenuDesktop() {
           </button>
         </div>
       )}
+      
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </div>
   );
 }
