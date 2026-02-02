@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import ProfileModal from "@/components/profile/ProfileModal";
 
 export default function BottomNav() {
   const path = usePathname();
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur border-t border-white/10 md:hidden">
@@ -15,10 +18,11 @@ export default function BottomNav() {
         <Link href="/trips/create" className="text-gray-400">
           +
         </Link>
-        <Link href="/profile" className="text-gray-400">
+        <button onClick={() => setShowProfile(true)} className="text-gray-400">
           Profile
-        </Link>
+        </button>
       </div>
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </nav>
   );
 }

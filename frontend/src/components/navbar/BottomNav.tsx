@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import ProfileModal from "@/components/profile/ProfileModal";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HomeIcon, MapIcon, UserCircleIcon } from "@heroicons/react/24/outline";
@@ -13,6 +15,7 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <nav
@@ -31,21 +34,36 @@ export default function BottomNav() {
           
           return (
             <li key={item.href} className="flex-1">
-              <Link
-                href={item.href}
-                className={`
-                  flex flex-col items-center justify-center h-full w-full
-                  ${active ? "text-emerald-500" : "text-slate-400 hover:text-slate-200"}
-                  transition-colors
-                `}
-              >
-                <Icon className="h-6 w-6 mb-1" />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </Link>
+              {item.href === "/profile" ? (
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className={`
+                    flex flex-col items-center justify-center h-full w-full
+                    ${active ? "text-emerald-500" : "text-slate-400 hover:text-slate-200"}
+                    transition-colors
+                  `}
+                >
+                  <Icon className="h-6 w-6 mb-1" />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </button>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={`
+                    flex flex-col items-center justify-center h-full w-full
+                    ${active ? "text-emerald-500" : "text-slate-400 hover:text-slate-200"}
+                    transition-colors
+                  `}
+                >
+                  <Icon className="h-6 w-6 mb-1" />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </Link>
+              )}
             </li>
           );
         })}
       </ul>
+      <ProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </nav>
   );
 }

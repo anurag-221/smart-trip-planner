@@ -89,8 +89,11 @@ export default function ProfileModal({
         onClick={onClose}
       />
 
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white shadow-2xl transition-all">
+      <div className="flex min-h-full items-end justify-center sm:items-center p-0 sm:p-4 text-center">
+        <div className="relative transform overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white text-left shadow-2xl transition-all w-full sm:max-w-md animate-in slide-in-from-bottom duration-300">
+          {/* Mobile Handle */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/30 rounded-full sm:hidden z-20" />
+          
           {/* Decorative Header Background */}
           <div className="h-32 bg-gradient-to-r from-violet-500 to-indigo-600"></div>
 
