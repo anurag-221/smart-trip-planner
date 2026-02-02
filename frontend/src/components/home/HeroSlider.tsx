@@ -64,7 +64,7 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative h-screen overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={onTouchStart}
@@ -72,27 +72,29 @@ export default function HeroSlider() {
     >
       {/* SLIDES */}
       <div
-        className="flex transition-transform duration-700 ease-in-out"
+        className="flex h-full transition-transform duration-700 ease-in-out"
         style={{
           transform: `translateX(-${index * 100}%)`,
         }}
       >
         {slides.map((slide, i) => (
-          <div key={i} className="w-full flex-shrink-0">
+          <div key={i} className="w-full h-full flex-shrink-0 relative">
+             {/* Gradient Overlay for Text Readability */}
+             <div className="absolute inset-0 bg-black/40 z-10" />
             <HeroSlide slide={slide} />
           </div>
         ))}
       </div>
 
       {/* DOTS */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}
             className={`
-              h-2 w-2 rounded-full transition-all
-              ${i === index ? "bg-white w-5" : "bg-white/40"}
+              h-2 rounded-full transition-all duration-300
+              ${i === index ? "bg-emerald-500 w-6" : "bg-white/50 w-2 hover:bg-white"}
             `}
           />
         ))}

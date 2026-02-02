@@ -5,7 +5,7 @@ import PageContainer from "@/components/layout/PageContainer";
 
 export default function HomePage() {
   return (
-    <PageContainer className="bg-slate-950 text-white">
+    <PageContainer className="bg-slate-950 text-white" fullWidth={true}>
       <HeroSlider />
     </PageContainer>
   );
